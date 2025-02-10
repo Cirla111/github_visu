@@ -17,7 +17,7 @@ function FranceMap() {
 
     useEffect(() => {
         
-        fetch( "/fichier_fusionne_v2.csv" )
+        fetch( "/data.csv" )
             .then( response => response.text() )
             .then((csvText) => {
 
