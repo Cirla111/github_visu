@@ -60,10 +60,13 @@ function FranceMap() {
           const key = `${curr.DEPARTEMENT}_${curr.AAAAMM}`;
           
           if (!acc[key]) {
-            acc[key] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: 0 };
+            acc[key] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: 0, count: 0, test: 0 };
           }
           
-          acc[key].RR += parseInt(curr.RR);
+          if (!isNaN(parseFloat(curr.RR))){
+            acc[key].RR += parseFloat(curr.RR);
+            acc[key].count += 1
+        }
           
           return acc;
         }, {}));
@@ -72,18 +75,27 @@ function FranceMap() {
     function transformToDictionary(data) {
     return data.reduce((acc, curr) => {
         // Use AAAAMM value as the key and assign the current object as its value
-        acc[curr.AAAAMM] = curr;
+        acc[curr.AAAAMM] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: curr.RR/curr.count};
         return acc;
     }, {});
+    }
+
+    const handleCorsica = (departement) => {
+        if (departement === '2A' || departement === '2B') {
+            return '20'
+        } else {
+            return departement
+        }
     }
 
     const formatData = () => {
         const finalDataTemp = geoData
         const aggregatedRainData = fuseByDepAndAAAAMM(rainData)
+        console.log("agg", aggregatedRainData);
         for (var j = 0; j < geoData.features.length; j++) {
-            const departement = +geoData.features[j].properties.code
+            const departement = handleCorsica(geoData.features[j].properties.code)
         
-            const DepChoisi = aggregatedRainData.filter((row) => parseInt(row.DEPARTEMENT) === departement)
+            const DepChoisi = aggregatedRainData.filter((row) => row.DEPARTEMENT === departement)
             finalDataTemp.features[j].properties.all = transformToDictionary(DepChoisi);
         }
         console.log("final data", finalDataTemp)
