@@ -3,6 +3,7 @@ import './App.css';
 import { Layout, Menu, theme } from 'antd';
 import TPMap from './TPMap/TPMap.tsx';
 import FranceMap from './FranceMap/FranceMap.tsx';
+import Test from './Test.tsx';
 
 
 const { Header, Content } = Layout;
@@ -28,26 +29,19 @@ function App() {
       <Layout>
         <Header style={{ display: 'flex', alignItems: 'center' }}>
           <div className="demo-logo" />
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            defaultSelectedKeys={['2']}
-            items={items}
-            style={{ flex: 1, minWidth: 0 }}
-          />
         </Header>
-        <Content style={{ padding: '0 48px' }}>
-          <div style={{ margin: '16px 0' }}>
-          </div>
+        <Content>
           <div
             style={{
               background: colorBgContainer,
-              minHeight: 280,
+              height: "80vh",
               padding: 24,
+              margin: "16px",
               borderRadius: borderRadiusLG,
             }}
           >
             <FranceMap/>
+            {/* <Test/> */}
           </div>
         </Content>
       </Layout>

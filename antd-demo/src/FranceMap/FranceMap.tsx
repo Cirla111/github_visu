@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import * as d3 from "d3";
-import { Button } from 'antd';
 import Papa from 'papaparse';
+import ScrubberElem from '../ScrubberElem/ScrubberElem.tsx';
+import { Col, Flex, Radio, Row, Typography } from 'antd';
+
+const { Title } = Typography;
 
 function FranceMap() {
     const [ rainData, setRainData ] = useState();
@@ -9,11 +12,12 @@ function FranceMap() {
     const [ finalData, setFinalData ] = useState();
 
     const [ selectedDep, setSelectedDep ] = useState({})
+    const [ moisExtent, setMoisExtent ] = useState([0,0])
     const [ moisChoisi, setMoisChoisi ] = useState("200001")
+    const [ mode, setMode ] = useState('mois')
 
-    const svgRef = useRef(); // Reference to the SVG element
-    const height = 580;
-    const width = 1150
+    const svgRef = useRef();
+    const wrapperRef = useRef();
 
     useEffect(() => {
         
@@ -23,7 +27,10 @@ function FranceMap() {
 
                 Papa.parse(csvText, {
                   complete: (result) => {
+                    const mois = result.data.map((line) => parseInt(line.AAAAMM)) 
+                    setMoisExtent(d3.extent(mois))
                     setRainData(result.data); 
+
                   },
                   header: true, 
                 });
@@ -50,9 +57,9 @@ function FranceMap() {
 
     useEffect(() => {
         if (finalData) {
-            Path(finalData); // Call Path function to render/transition the map
+            Path(finalData); 
         }
-    }, [finalData]);
+    }, [finalData, moisChoisi]);
 
 
     function fuseByDepAndAAAAMM(data) {
@@ -74,7 +81,6 @@ function FranceMap() {
     
     function transformToDictionary(data) {
     return data.reduce((acc, curr) => {
-        // Use AAAAMM value as the key and assign the current object as its value
         acc[curr.AAAAMM] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: curr.RR/curr.count};
         return acc;
     }, {});
@@ -103,27 +109,37 @@ function FranceMap() {
     }
 
     const Path = (data) => {
-  
-        console.log("entered");
-        const projection = d3.geoConicConformal().center([2.454071, 46.279229]).scale(2800);
+
+        const { width: containerWidth, height: containerHeight } = wrapperRef.current.getBoundingClientRect();
+
+        const projection = d3.geoConicConformal()
+            .center([2.454071, 46.279229])
+            .scale(containerWidth * 3.8) 
+            .translate([containerWidth / 2, containerHeight / 2]); 
+
         const path = d3.geoPath(projection);
 
-        const svg = d3.select(svgRef.current)
+        const height="100%"
+        const width ="100%"
 
-        .attr("width", width)
-        .attr("height", height);
+        const svg = d3.select(svgRef.current)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`) 
+           .attr("preserveAspectRatio", "xMidYMid meet");
         
         // On rajoute un groupe englobant toute la visualisation pour plus tard
-        let g = svg.select("g"); // Select the group without removing it, or append if it doesn't exist
+        let g = svg.select("g"); 
         if (g.empty()) {
             g = svg.append("g");
         }
-        
         
         const values = data.features.map(d => d.properties.all[moisChoisi]?.RR ?? 0)
         console.log("domain", values, d3.extent(values))
 
         const color = d3.scaleSequential(d3.interpolatePurples).domain(d3.extent(values))
+
+
         
         // create a tooltip
         let Tooltip = d3.select(".tooltip");
@@ -171,39 +187,24 @@ function FranceMap() {
             .style("stroke", "transparent")
         }
         
-        // Append the legend.
-        // svg.append("g")
-        //     .attr("transform", "translate(20,0)")
-        //     .append(() => Legend(color, {title: "Nombre d'hosptalisations", width: 260}));
-        
         let yearLabel = svg.select(".year-label");
         if (yearLabel.empty()) {
             yearLabel = svg
                 .append("text")
                 .attr("class", "year-label")
                 .attr("x", 200)
-                .attr("y", height - 100)
+                .attr("y", containerHeight - 50)
                 .attr("font-size", 80)
                 .attr("fill", "lightgrey")
                 .attr("text-anchor", "middle");
         }
         yearLabel.text(moisChoisi);
           
-          //const depLabel = svg
-              //.append("text")
-              //.attr("x", width - 350)
-              //.attr("y", 100)
-              //.attr("font-size", 112)
-              //.attr("fill", "lightgrey")
-              //.attr("text-anchor", "middle")
-              //.text(selectedDep.nom);
-          
         g.selectAll("path")
             .data(data.features)
             .join("path")
             .attr("d", path)
             .style("stroke", "transparent")
-            .style("opacity", 0.8)
             .on("click", setSelectedDep)
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
@@ -216,10 +217,43 @@ function FranceMap() {
       }
   
       return (
-          <div>
-              <svg ref={svgRef} ></svg>
-          </div>
-      )
+
+        <Row style={{height: '100%', width: '100%'}}>
+          <Col flex={2}
+          style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center', 
+              height: '100%',
+            }}
+          >
+              <Flex vertical align="flex-start" justify="center" style={{height: "85%", paddingLeft: "10%"}}>
+                  <Title>Echelle temporelle</Title>
+                  <Radio.Group
+                      style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
+                          paddingLeft: 40,
+                        }}
+                      onChange={(e) => setMode(e.target.value)}
+                      value={mode}
+                      options={[
+                          { value: 'mois', label: (<div style={{fontSize: 20, fontWeight: 'bold'}}>Mois</div>) },
+                          { value: 'annees', label: (<div style={{fontSize: 20, fontWeight: 'bold'}}>Années</div>) },
+                      ]}
+                      />
+              </Flex>
+              <ScrubberElem extent={moisExtent} setMois={setMoisChoisi} />
+          </Col>
+          <Col flex={3} style={{height: '100%'}}>
+            <div ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
+                    <svg ref={svgRef}></svg>
+                </div>
+          </Col>
+            
+        </Row>
+    )
 }
 
 export default FranceMap

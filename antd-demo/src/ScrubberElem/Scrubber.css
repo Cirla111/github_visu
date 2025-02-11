@@ -1,0 +1,24 @@
+.scrubber-container {
+    height: 20px;
+    background-color: #f3f4f6; /* light background */
+    border-radius: 10px;
+    position: relative;
+  }
+  
+  .scrubber.horizontal .bar {
+    background-color: #d1d5db; /* gray line */
+    height: 2px; /* thinner line */
+    border-radius: 2px;
+    width: 96%;
+    left: 2%;
+    right: 2%;
+  }
+  
+  .scrubber-container .scrubber .handle {
+    width: 12px;
+    height: 12px;
+    background-color: #4f46e5; /* purple handle */
+    border-radius: 50%; /* circular handle */
+    box-shadow: 0 0 8px rgba(79, 70, 229, 0.5); /* glow effect */
+  }
+  
