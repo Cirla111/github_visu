@@ -1,112 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react'
 import * as d3 from "d3";
-import Papa from 'papaparse';
-import ScrubberElem from '../ScrubberElem/ScrubberElem.tsx';
-import { Col, Flex, Radio, Row, Typography } from 'antd';
+import { Col } from 'antd';
 
-const { Title } = Typography;
 
-function FranceMap() {
-    const [ rainData, setRainData ] = useState();
-    const [ geoData, setGeoData ] = useState();
-    const [ finalData, setFinalData ] = useState();
 
-    const [ selectedDep, setSelectedDep ] = useState({})
-    const [ moisExtent, setMoisExtent ] = useState([0,0])
-    const [ moisChoisi, setMoisChoisi ] = useState("200001")
-    const [ mode, setMode ] = useState('mois')
+function FranceMap(props) {
 
-    const svgRef = useRef();
-    const wrapperRef = useRef();
-
-    useEffect(() => {
-        
-        fetch( "/data.csv" )
-            .then( response => response.text() )
-            .then((csvText) => {
-
-                Papa.parse(csvText, {
-                  complete: (result) => {
-                    const mois = result.data.map((line) => parseInt(line.AAAAMM)) 
-                    setMoisExtent(d3.extent(mois))
-                    setRainData(result.data); 
-
-                  },
-                  header: true, 
-                });
-              })
-            .catch((error) => console.error('Error fetching GeoJSON:', error));
-        
-    }, []);
-
-    useEffect(() => {
-            fetch('/departements.geojson')
-                .then( response => response.json())
-                .then(responseJson => {
-                    setGeoData(responseJson)
-                })
-                .catch((error) => console.error('Error fetching GeoJSON:', error));
-        
-    }, []);
-
-    useEffect(() => {
-        if (rainData && geoData){
-            formatData()
-        }
-    }, [rainData, geoData]);
+    const { finalData, moisChoisi, setSelectedDep } = props;
 
     useEffect(() => {
         if (finalData) {
             Path(finalData); 
         }
     }, [finalData, moisChoisi]);
-
-
-    function fuseByDepAndAAAAMM(data) {
-        return Object.values(data.reduce((acc, curr) => {
-          const key = `${curr.DEPARTEMENT}_${curr.AAAAMM}`;
-          
-          if (!acc[key]) {
-            acc[key] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: 0, count: 0, test: 0 };
-          }
-          
-          if (!isNaN(parseFloat(curr.RR))){
-            acc[key].RR += parseFloat(curr.RR);
-            acc[key].count += 1
-        }
-          
-          return acc;
-        }, {}));
-      }
     
-    function transformToDictionary(data) {
-    return data.reduce((acc, curr) => {
-        acc[curr.AAAAMM] = { DEPARTEMENT: curr.DEPARTEMENT, AAAAMM: curr.AAAAMM, RR: curr.RR/curr.count};
-        return acc;
-    }, {});
+
+    const svgRef = useRef();
+    const wrapperRef = useRef();
+
+    const onDepClick = () => {
+        window.scrollTo({
+            top: document.body.scrollHeight, // Scroll to the bottom
+            behavior: "smooth"               // Scroll behavior: smooth or instant
+          });
     }
 
-    const handleCorsica = (departement) => {
-        if (departement === '2A' || departement === '2B') {
-            return '20'
-        } else {
-            return departement
-        }
-    }
-
-    const formatData = () => {
-        const finalDataTemp = geoData
-        const aggregatedRainData = fuseByDepAndAAAAMM(rainData)
-        console.log("agg", aggregatedRainData);
-        for (var j = 0; j < geoData.features.length; j++) {
-            const departement = handleCorsica(geoData.features[j].properties.code)
-        
-            const DepChoisi = aggregatedRainData.filter((row) => row.DEPARTEMENT === departement)
-            finalDataTemp.features[j].properties.all = transformToDictionary(DepChoisi);
-        }
-        console.log("final data", finalDataTemp)
-        setFinalData(finalDataTemp)
-    }
+    
 
     const Path = (data) => {
 
@@ -114,7 +33,7 @@ function FranceMap() {
 
         const projection = d3.geoConicConformal()
             .center([2.454071, 46.279229])
-            .scale(containerWidth * 3.8) 
+            .scale(containerWidth * 3.3) 
             .translate([containerWidth / 2, containerHeight / 2]); 
 
         const path = d3.geoPath(projection);
@@ -125,8 +44,7 @@ function FranceMap() {
         const svg = d3.select(svgRef.current)
             .attr("width", width)
             .attr("height", height)
-            .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`) 
-           .attr("preserveAspectRatio", "xMidYMid meet");
+            .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`)
         
         // On rajoute un groupe englobant toute la visualisation pour plus tard
         let g = svg.select("g"); 
@@ -205,7 +123,7 @@ function FranceMap() {
             .join("path")
             .attr("d", path)
             .style("stroke", "transparent")
-            .on("click", setSelectedDep)
+            .on("click", onDepClick)
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
@@ -217,42 +135,10 @@ function FranceMap() {
       }
   
       return (
-
-        <Row style={{height: '100%', width: '100%'}}>
-          <Col flex={2}
-          style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center', 
-              height: '100%',
-            }}
-          >
-              <Flex vertical align="flex-start" justify="center" style={{height: "85%", paddingLeft: "10%"}}>
-                  <Title>Echelle temporelle</Title>
-                  <Radio.Group
-                      style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 8,
-                          paddingLeft: 40,
-                        }}
-                      onChange={(e) => setMode(e.target.value)}
-                      value={mode}
-                      options={[
-                          { value: 'mois', label: (<div style={{fontSize: 20, fontWeight: 'bold'}}>Mois</div>) },
-                          { value: 'annees', label: (<div style={{fontSize: 20, fontWeight: 'bold'}}>Années</div>) },
-                      ]}
-                      />
-              </Flex>
-              <ScrubberElem extent={moisExtent} setMois={setMoisChoisi} />
-          </Col>
-          <Col flex={3} style={{height: '100%'}}>
-            <div ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
-                    <svg ref={svgRef}></svg>
-                </div>
-          </Col>
-            
-        </Row>
+        
+        <div ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
+            <svg ref={svgRef}></svg>
+        </div>
     )
 }
 

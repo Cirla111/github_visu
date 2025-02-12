@@ -53,7 +53,7 @@ export default function ScrubberElem(props) {
         <Button color='default' 
           variant="solid"
           shape="round" 
-          icon={play ? <PlayCircleOutlined /> : <PauseCircleOutlined />} 
+          icon={play ? <PauseCircleOutlined /> : <PlayCircleOutlined />} 
           size={'large'}
           onClick={playBtn}
           >
