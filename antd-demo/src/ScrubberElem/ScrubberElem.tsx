@@ -23,18 +23,26 @@ export default function ScrubberElem(props) {
     setValue(Math.round(value));
   };
 
-  // useEffect(() => {
-  //   setMois(String(value))
-  // }, [value])
+   useEffect(() => {
+     setMois(String(value))
+   }, [value])
 
   useEffect(() => {
     // Implementing the setInterval method only if play is true
     if (play) {
       const interval = setInterval(() => {
-        setValue((prevValue) => (prevValue < extent[1] && prevValue >= extent[0]) ? prevValue + 1 : extent[0]);
+        setValue((prevValue) => {
+          let year = Math.floor(prevValue / 100); // Extraction de l'année
+          let month = prevValue % 100; // Extraction du mois
+      
+          if (month < 12) {
+            return year * 100 + (month + 1); // Incrémentation du mois
+          } else {
+            return (year + 1) * 100 + 1; // Passage à l'année suivante (mois = 01)
+          }
+        });
       }, 1000);
-
-      // Clearing the interval
+      
       return () => clearInterval(interval);
     }
   }, [play]);

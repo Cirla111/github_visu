@@ -25,7 +25,11 @@ function FranceMap(props) {
           });
     }
 
-    
+    const formatMonth = (date) => {
+        const parseDate = d3.timeParse("%Y%m")
+        const timeFormat = d3.timeFormat("%B %Y")
+        return timeFormat(parseDate(date))
+    }   
 
     const Path = (data) => {
 
@@ -55,7 +59,52 @@ function FranceMap(props) {
         const values = data.features.map(d => d.properties.all[moisChoisi]?.RR ?? 0)
         console.log("domain", values, d3.extent(values))
 
-        const color = d3.scaleSequential(d3.interpolatePurples).domain(d3.extent(values))
+
+        const x = d3.scaleLinear().domain(d3.extent(values)).rangeRound([400, 700]);
+
+        const color = d3.scaleSequential(d3.interpolatePurples).domain(d3.extent(values));
+
+
+        const gradient = g.append("defs")
+            .append("linearGradient")
+            .attr("id", "gradient-colors")
+            .attr("x1", "0%")
+            .attr("x2", "100%");
+
+        const numStops = 10; // Nombre de segments pour approximer le dégradé
+
+        gradient.selectAll("stop")
+            .data(d3.range(numStops).map(i => {
+                const t = i / (numStops - 1);
+                return { offset: `${t * 100}%`, color: color(d3.interpolate(...d3.extent(values))(t)) };
+            }))
+            .enter()
+            .append("stop")
+            .attr("offset", d => d.offset)
+            .attr("stop-color", d => d.color);
+
+        g.append("rect")
+            .attr("height", 8)
+            .attr("x", x(d3.extent(values)[0]))
+            .attr("width", x(d3.extent(values)[1]) - x(d3.extent(values)[0]))
+            .style("fill", "url(#gradient-colors)");
+
+        // Ajout des tickmarks
+        const axis = d3.axisBottom(x)
+        .ticks(6) // Nombre de ticks, ajustable
+        .tickSize(6) // Taille des ticks
+        .tickFormat(d3.format(".2f")); // Format des labels
+
+        // Ajouter un groupe pour l'axe si nécessaire
+        let axisGroup = svg.select(".axis");
+        if (axisGroup.empty()) {
+            axisGroup = svg.append("g").attr("class", "axis");
+        }
+
+        // Mettre à jour l'axe au lieu d'en créer un nouveau
+        axisGroup
+            .attr("transform", `translate(0, 10)`) // Ajuster pour éviter le décalage
+            .call(axis);
 
 
         
@@ -112,11 +161,11 @@ function FranceMap(props) {
                 .attr("class", "year-label")
                 .attr("x", 200)
                 .attr("y", containerHeight - 50)
-                .attr("font-size", 80)
+                .attr("font-size", 50)
                 .attr("fill", "lightgrey")
                 .attr("text-anchor", "middle");
         }
-        yearLabel.text(moisChoisi);
+        yearLabel.text(formatMonth(moisChoisi));
           
         g.selectAll("path")
             .data(data.features)
