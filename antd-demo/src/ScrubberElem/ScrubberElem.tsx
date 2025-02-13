@@ -22,7 +22,7 @@ export default function ScrubberElem(props) {
   let handleScrubChange = (value: number) => {
     setValue(Math.round(value));
   };
-
+  
    useEffect(() => {
      setMois(String(value))
    }, [value])
@@ -54,6 +54,34 @@ export default function ScrubberElem(props) {
 
   console.log(extent, value)
 
+  // Générer toutes les dates valides entre extent[0] et extent[1]
+  const generateValidMonths = (start, end) => {
+    let dates = [];
+    let year = Math.floor(start / 100);
+    let month = start % 100;
+
+    while (year * 100 + month <= end) {
+      dates.push(year * 100 + month);
+      if (month < 12) {
+        month += 1;
+      } else {
+        month = 1;
+        year += 1;
+      }
+    }
+    return dates;
+  };
+
+  const validMonths = generateValidMonths(extent[0], extent[1]);
+
+  // Fonction pour trouver la date valide la plus proche
+  const findClosestValidMonth = (val) => {
+    return validMonths.reduce((prev, curr) =>
+      Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
+    );
+  };
+
+
   return (
     <Row gutter={[16, 24]} style={{width: "100%"}}>
       <Col span={24}>
@@ -74,13 +102,14 @@ export default function ScrubberElem(props) {
 
         <div className="scrubber-container" style={{ height: "20px" }}>
           <Scrubber
-            min={extent[0]}
-            max={extent[1]}
+            min={validMonths[0]}
+            max={validMonths[validMonths.length - 1]}
             value={value}
-            onScrubStart={handleScrubStart}
-            onScrubEnd={handleScrubEnd}
-            onScrubChange={handleScrubChange}
+            onScrubStart={(val) => setValue(findClosestValidMonth(val))}
+            onScrubEnd={(val) => setValue(findClosestValidMonth(val))}
+            onScrubChange={(val) => setValue(findClosestValidMonth(val))}
           />
+
         </div>
         {value}
       </Col>
