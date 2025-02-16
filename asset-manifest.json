@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/projet-data-viz/static/css/main.aac4ad24.css",
+    "main.js": "/projet-data-viz/static/js/main.48be2e5c.js",
+    "index.html": "/projet-data-viz/index.html",
+    "main.aac4ad24.css.map": "/projet-data-viz/static/css/main.aac4ad24.css.map",
+    "main.48be2e5c.js.map": "/projet-data-viz/static/js/main.48be2e5c.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.aac4ad24.css",
+    "static/js/main.48be2e5c.js"
+  ]
+}
