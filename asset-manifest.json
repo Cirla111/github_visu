@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/github_visu/static/css/main.aac4ad24.css",
-    "main.js": "/github_visu/static/js/main.48be2e5c.js",
+    "main.js": "/github_visu/static/js/main.c32c0005.js",
     "index.html": "/github_visu/index.html",
     "main.aac4ad24.css.map": "/github_visu/static/css/main.aac4ad24.css.map",
-    "main.48be2e5c.js.map": "/github_visu/static/js/main.48be2e5c.js.map"
+    "main.c32c0005.js.map": "/github_visu/static/js/main.c32c0005.js.map"
   },
   "entrypoints": [
     "static/css/main.aac4ad24.css",
-    "static/js/main.48be2e5c.js"
+    "static/js/main.c32c0005.js"
   ]
 }
