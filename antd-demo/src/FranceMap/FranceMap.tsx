@@ -126,7 +126,7 @@ function FranceMap(props) {
 
         const [minValue, maxValue] = globalExtent; // Min et Max globaux
 
-        const color = d3.scaleSequential(d3.interpolateViridis).domain([minValue, maxValue]);
+        const color = d3.scaleSequential(d3.interpolateYlGnBu).domain([minValue, maxValue]);
         
         const x = d3.scaleLinear().domain([globalExtent[0], globalExtent[1]]).rangeRound([400, 700]);
 
